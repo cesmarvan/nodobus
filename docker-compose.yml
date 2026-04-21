@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgis/postgis:17-3.4
+    container_name: nodobus-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-nodobus}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nodobus123}
+      POSTGRES_DB: ${DB_NAME:-nodobus}clockify
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-nodobus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nodobus
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nodobus-backend
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-nodobus}:${DB_PASSWORD:-nodobus123}@db:5432/${DB_NAME:-nodobus}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - nodobus
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nodobus-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - nodobus
+
+volumes:
+  postgres_data:
+
+networks:
+  nodobus:
+    driver: bridge
