@@ -11,4 +11,11 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
   ],
+  server: {
+    middlewareMode: false,
+  },
+  preview: {
+    port: 3000,
+  },
+  appType: 'spa',
 })

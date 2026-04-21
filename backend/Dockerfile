@@ -1,11 +1,10 @@
-FROM python:3.14-slim
-
+FROM python:3.14-alpine
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     gcc \
-    postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
+    musl-dev \
+    postgresql-client
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
