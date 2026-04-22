@@ -8,7 +8,7 @@ from core.database import get_db
 from services.lineas.schemas import ParadaCreate, ParadaUpdate, ParadaResponse
 from services.lineas.services import ParadaService
 
-router = APIRouter(prefix="/api/v1/paradas", tags=["paradas"])
+router = APIRouter(prefix="/paradas", tags=["paradas"])
 service = ParadaService()
 
 

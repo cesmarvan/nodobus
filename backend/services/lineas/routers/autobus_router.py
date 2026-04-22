@@ -8,7 +8,7 @@ from core.database import get_db
 from services.lineas.schemas import AutobusCreate, AutobusUpdate, AutobusResponse
 from services.lineas.services import AutobusService
 
-router = APIRouter(prefix="/api/v1/autobuses", tags=["autobuses"])
+router = APIRouter(prefix="/autobuses", tags=["autobuses"])
 service = AutobusService()
 
 
