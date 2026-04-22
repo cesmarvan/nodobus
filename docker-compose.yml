@@ -24,7 +24,10 @@ services:
       dockerfile: Dockerfile
     container_name: nodobus-backend
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-nodobus}:${DB_PASSWORD:-nodobus123}@db:5432/${DB_NAME:-nodobus}
+      DB_HOST: db
+      DB_USER: ${DB_USER:-nodobus}
+      DB_PASSWORD: ${DB_PASSWORD:-nodobus123}
+      DB_NAME: ${DB_NAME:-nodobus}
     ports:
       - "8000:8000"
     depends_on:
