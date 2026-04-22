@@ -4,8 +4,8 @@ services:
     container_name: nodobus-db
     environment:
       POSTGRES_USER: ${DB_USER:-nodobus}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-nodobus123}
-      POSTGRES_DB: ${DB_NAME:-nodobus}clockify
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-nodobus}
     ports:
       - "5432:5432"
     volumes:

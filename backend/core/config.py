@@ -1,6 +1,6 @@
-from dataclasses import Field
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,11 +9,11 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     api_prefix: str = "/api"
 
-    DB_USER:str = Field("nodobus", env="DB_USER")
-    DB_PASSWORD:str = Field("nodobus123", env="DB_PASSWORD")
-    DB_HOST:str = Field("localhost", env="DB_HOST")
-    DB_PORT:str = Field("5432", env="DB_PORT")
-    DB_NAME:str = Field("nodobus", env="DB_NAME")
+    DB_USER: str = Field(default="nodobus", validation_alias="DB_USER")
+    DB_PASSWORD: str = Field(default="nodobus123", validation_alias="DB_PASSWORD")
+    DB_HOST: str = Field(default="localhost", validation_alias="DB_HOST")
+    DB_PORT: str = Field(default="5432", validation_alias="DB_PORT")
+    DB_NAME: str = Field(default="nodobus", validation_alias="DB_NAME")
 
     @property
     def database_url(self) -> str:
