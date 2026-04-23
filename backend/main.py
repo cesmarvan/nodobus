@@ -6,6 +6,7 @@ from core.config import get_settings
 from core.database import engine
 from services.incidencias.routers.incidencia import router as incidencias_router
 from services.lineas.routers import autobus_router, linea_router, parada_linea_router,parada_router
+from services.fetcher.routers.fetcher_router import router as fetcher_router
 
 
 settings = get_settings()
@@ -44,7 +45,7 @@ async def root() -> dict[str, object]:
     return {
         "message": "Nodobus API is running",
         "status": "ok",
-        "services": ["incidencias", "lineas"],
+        "services": ["incidencias", "lineas", "fetcher"],
     }
 
 
@@ -53,3 +54,4 @@ app.include_router(autobus_router, prefix=settings.api_prefix)
 app.include_router(linea_router, prefix=settings.api_prefix)
 app.include_router(parada_linea_router, prefix=settings.api_prefix)
 app.include_router(parada_router, prefix=settings.api_prefix)
+app.include_router(fetcher_router, prefix=settings.api_prefix)
