@@ -8,7 +8,7 @@ from core.database import get_db
 from services.incidencias.schemas.incidencia import IncidenciaCreate, IncidenciaUpdate, IncidenciaResponse
 from services.incidencias.services.incidencia import IncidenciaService
 
-router = APIRouter(prefix="/api/v1/incidencias", tags=["incidencias"])
+router = APIRouter(prefix="/incidencias", tags=["incidencias"])
 service = IncidenciaService()
 
 
@@ -34,12 +34,12 @@ async def get_incidencia(incidencia_id: int, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Incidencia not found")
     return incidencia
 
-@router.get("/linea/{linea_id}", response_model=List[IncidenciaResponse])
+@router.get("/by-linea/{linea_id}", response_model=List[IncidenciaResponse])
 async def get_incidencias_by_linea(linea_id: int, db: AsyncSession = Depends(get_db)):
     """Get all Incidencias for a specific Linea."""
     return await service.get_incidencias_by_linea_id(db, linea_id)
 
-@router.get("/parada/{parada_id}", response_model=List[IncidenciaResponse])
+@router.get("/by-parada/{parada_id}", response_model=List[IncidenciaResponse])
 async def get_incidencias_by_parada(parada_id: int, db: AsyncSession = Depends(get_db)):
     """Get all Incidencias for a specific Parada."""
     return await service.get_incidencias_by_parada_id(db, parada_id)

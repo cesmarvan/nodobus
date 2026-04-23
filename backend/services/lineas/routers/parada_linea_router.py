@@ -77,3 +77,8 @@ async def get_parada_linea_relationship(parada_id: int, linea_id: int, db: Async
     if not parada_linea:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ParadaLinea relationship not found")
     return parada_linea
+
+@router.post("/vincular-paradas")
+async def trigger_vincular_paradas(db: AsyncSession = Depends(get_db)):
+    await service.vincular_paradas_con_lineas(db, distancia_tolerancia_metros=50.0)
+    return {"message": "Proceso de vinculación espacial completado con éxito"}
