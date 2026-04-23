@@ -55,7 +55,16 @@ export default function IncidenciasPage() {
 
   // Cargar líneas al inicio y las incidencias globales
   useEffect(() => {
-    lineaService.get_lineas().then(setLineas).catch(console.error);
+    lineaService
+      .get_lineas()
+      .then((data) =>
+        setLineas(
+          [...data].sort((a, b) =>
+            String(a.labelLinea ?? a.nombre ?? '').localeCompare(String(b.labelLinea ?? b.nombre ?? ''))
+          )
+        )
+      )
+      .catch(console.error);
     getIncidencias();
   }, []);
 

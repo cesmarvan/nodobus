@@ -2,6 +2,7 @@
 
 import { BrowserRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 import IncidenciasPage from './pages/IncidenciasPage';
+import LineaDetallePage from './pages/LineaDetallePage.tsx';
 import LineasPage from './pages/LineasPage';
 
 function NavLinks() {
@@ -48,6 +49,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LineasPage />} />
             <Route path="/incidencias" element={<IncidenciasPage />} />
+            <Route path="/lineas/:id" element={<LineaDetallePage />} />
           </Routes>
         </main>
       </div>
