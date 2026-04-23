@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from core.config import get_settings
 from core.database import engine
-from services.incidencias.router import router as incidencias_router
+from services.incidencias.routers.incidencia import router as incidencias_router
 from services.lineas.routers import autobus_router, linea_router, parada_linea_router,parada_router
 
 
