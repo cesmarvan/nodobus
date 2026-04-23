@@ -8,7 +8,7 @@ from core.database import get_db
 from services.lineas.schemas import LineaCreate, LineaUpdate, LineaResponse
 from services.lineas.services import LineaService
 
-router = APIRouter(prefix="/api/v1/lineas", tags=["lineas"])
+router = APIRouter(prefix="/lineas", tags=["lineas"])
 service = LineaService()
 
 
