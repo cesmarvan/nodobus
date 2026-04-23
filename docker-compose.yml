@@ -38,6 +38,7 @@ services:
     container_name: nodobus-backend
     environment:
       DB_HOST: db
+      DB_PORT: "5432"
       DB_USER: ${DB_USER:-nodobus}
       DB_PASSWORD: ${DB_PASSWORD:-nodobus123}
       DB_NAME: ${DB_NAME:-nodobus}

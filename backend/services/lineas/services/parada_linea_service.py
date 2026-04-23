@@ -2,7 +2,6 @@
 
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
 
 from services.lineas.schemas import (
     ParadaLineaCreate,
@@ -67,24 +66,4 @@ class ParadaLineaService:
         if db_parada_linea:
             return ParadaLineaResponse.model_validate(db_parada_linea)
         return None
-    
-    async def vincular_paradas_con_lineas(self, db: AsyncSession, distancia_tolerancia_metros: float = 30.0):
-        # En EPSG:4326 (WGS84), 1 grado son unos 111,000 metros.
-        # Convertimos los metros a grados aproximadamente para la tolerancia.
-        tolerancia_grados = distancia_tolerancia_metros / 111000.0
-        
-        query = text(f"""
-            INSERT INTO parada_linea (parada_id, linea_id)
-            SELECT p.id, l.id
-            FROM parada p
-            JOIN linea l
-            -- ST_DWithin comprueba si la distancia entre el Punto y el LineString 
-            -- es menor que la tolerancia.
-            ON ST_DWithin(p.localizacion, l.recorrido, :tolerancia)
-            -- Evitar duplicados si ya existen
-            ON CONFLICT DO NOTHING;
-        """)
-        
-        await db.execute(query, {"tolerancia": tolerancia_grados})
-        await db.commit()
     

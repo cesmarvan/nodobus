@@ -210,6 +210,7 @@ class FetcherService:
                         nombre=feature.attributes.NOMBRE,
                         codigo=feature.attributes.CODIGO,
                         descripcion=feature.attributes.DESCRIPCION,
+                        labelLinea=feature.attributes.LABELLINEA,
                         localizacion=localizacion,
                     )
                     paradas.append(parada)

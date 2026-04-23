@@ -12,6 +12,7 @@ from services.fetcher.services.lineas_client import LineasAPIClient
 from services.lineas.schemas.autobus import AutobusCreate, AutobusUpdate
 from services.lineas.schemas.linea import LineaCreate, LineaUpdate
 from services.lineas.schemas.parada import ParadaCreate, ParadaUpdate
+from services.lineas.schemas.parada_linea import ParadaLineaCreate
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,10 @@ class SyncService:
 
     async def sync_paradas(self) -> FetchResultResponse:
         """Sync paradas from ArcGIS to database via Lineas service API.
+        
+        For each parada, if a LabelLinea attribute is present:
+        - Check if a Linea exists with that labelLinea
+        - If exists, create a ParadaLinea relationship if it doesn't already exist
 
         Returns:
             FetchResultResponse with sync statistics
@@ -153,6 +158,7 @@ class SyncService:
                             localizacion=parada_data.localizacion,
                         )
                         await self.lineas_client.update_parada(existing_parada.id, update_data)
+                        parada_id = existing_parada.id
                         updated += 1
                         logger.debug(f"Updated parada {parada_data.nodo}")
                     else:
@@ -162,9 +168,58 @@ class SyncService:
                             nombre=parada_data.nombre,
                             localizacion=parada_data.localizacion or {"type": "Point", "coordinates": []},
                         )
-                        await self.lineas_client.create_parada(create_data)
+                        new_parada = await self.lineas_client.create_parada(create_data)
+                        parada_id = new_parada.id
                         created += 1
                         logger.debug(f"Created parada {parada_data.nodo}")
+
+                    # Handle ParadaLinea relationship if labelLinea is present
+                    if parada_data.labelLinea:
+                        try:
+                            # Check if linea exists with this labelLinea
+                            linea = await self.lineas_client.get_linea_by_labelLinea(
+                                parada_data.labelLinea
+                            )
+                            
+                            if linea:
+                                # Check if ParadaLinea relationship already exists
+                                existing_parada_linea = (
+                                    await self.lineas_client.get_parada_linea_relationship(
+                                        parada_id, linea.id
+                                    )
+                                )
+                                
+                                if not existing_parada_linea:
+                                    # Create new ParadaLinea relationship
+                                    parada_linea_data = ParadaLineaCreate(
+                                        parada_id=parada_id,
+                                        linea_id=linea.id,
+                                    )
+                                    await self.lineas_client.create_parada_linea(parada_linea_data)
+                                    logger.debug(
+                                        f"Created ParadaLinea relationship: parada {parada_data.nodo} "
+                                        f"to linea {linea.linea} (labelLinea: {parada_data.labelLinea})"
+                                    )
+                                else:
+                                    logger.debug(
+                                        f"ParadaLinea relationship already exists: parada {parada_data.nodo} "
+                                        f"to linea {linea.linea}"
+                                    )
+                            else:
+                                logger.warning(
+                                    f"Linea not found for labelLinea '{parada_data.labelLinea}' "
+                                    f"(parada: {parada_data.nodo})"
+                                )
+                        except httpx.HTTPError as e:
+                            logger.warning(
+                                f"Failed to create/check ParadaLinea for parada {parada_data.nodo} "
+                                f"with labelLinea '{parada_data.labelLinea}': API error - {e}"
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"Failed to create/check ParadaLinea for parada {parada_data.nodo} "
+                                f"with labelLinea '{parada_data.labelLinea}': {e}"
+                            )
 
                 except httpx.HTTPError as e:
                     failed += 1

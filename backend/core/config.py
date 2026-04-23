@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     DB_USER: str = Field(default="nodobus", validation_alias="DB_USER")
     DB_PASSWORD: str = Field(default="nodobus123", validation_alias="DB_PASSWORD")
     DB_HOST: str = Field(default="localhost", validation_alias="DB_HOST")
-    DB_PORT: str = Field(default="5432", validation_alias="DB_PORT")
+    DB_PORT: str = Field(default="5433", validation_alias="DB_PORT")
     DB_NAME: str = Field(default="nodobus", validation_alias="DB_NAME")
 
     # External API URLs for fetcher service

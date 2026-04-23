@@ -9,6 +9,7 @@ from core.config import get_settings
 from services.lineas.schemas.autobus import AutobusCreate, AutobusResponse, AutobusUpdate
 from services.lineas.schemas.linea import LineaCreate, LineaResponse, LineaUpdate
 from services.lineas.schemas.parada import ParadaCreate, ParadaResponse, ParadaUpdate
+from services.lineas.schemas.parada_linea import ParadaLineaCreate, ParadaLineaResponse
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -121,6 +122,26 @@ class LineasAPIClient:
             logger.error(f"Error updating linea {linea_id}: {e}")
             raise
 
+    async def get_linea_by_labelLinea(self, labelLinea: str) -> Optional[LineaResponse]:
+        """Get a Linea by its label identifier.
+
+        Args:
+            labelLinea: Line label identifier
+
+        Returns:
+            LineaResponse or None if not found
+        """
+        try:
+            data = await self._request("GET", f"/lineas/by-label/{labelLinea}")
+            return LineaResponse(**data)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return None
+            raise
+        except Exception as e:
+            logger.error(f"Error getting linea by labelLinea {labelLinea}: {e}")
+            return None
+
     # Parada operations
 
     async def get_parada_by_nodo(self, nodo: int) -> Optional[ParadaResponse]:
@@ -232,3 +253,45 @@ class LineasAPIClient:
         except Exception as e:
             logger.error(f"Error updating autobus {autobus_id}: {e}")
             raise
+   
+
+    # ParadaLinea operations
+
+    async def get_parada_linea_relationship(
+        self, parada_id: int, linea_id: int
+    ) -> Optional[ParadaLineaResponse]:
+        """Get a specific ParadaLinea relationship between a Parada and Linea.
+
+        Args:
+            parada_id: Parada ID
+            linea_id: Linea ID
+
+        Returns:
+            ParadaLineaResponse or None if not found
+        """
+        try:
+            data = await self._request("GET", f"/parada-lineas/parada/{parada_id}/linea/{linea_id}")
+            return ParadaLineaResponse(**data)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return None
+            raise
+        except Exception as e:
+            logger.error(
+                f"Error getting parada_linea relationship for parada {parada_id}, "
+                f"linea {linea_id}: {e}"
+            )
+            return None
+
+    async def create_parada_linea(self, parada_linea_data: ParadaLineaCreate) -> ParadaLineaResponse:
+        """Create a new ParadaLinea relationship.
+
+        Args:
+            parada_linea_data: ParadaLineaCreate schema
+
+        Returns:
+            Created ParadaLineaResponse
+        """
+        data = await self._request("POST", "/parada-lineas", parada_linea_data.model_dump())
+        return ParadaLineaResponse(**data)
+    

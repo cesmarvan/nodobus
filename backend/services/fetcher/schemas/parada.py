@@ -21,6 +21,7 @@ class ArcGISParadaAttributes(BaseModel):
     NOMBRE: Optional[str] = Field(None, alias="Nombre")
     CODIGO: Optional[str] = Field(None, alias="Codigo")  # Optional field
     DESCRIPCION: Optional[str] = Field(None, alias="Description")  # Optional field
+    LABELLINEA: Optional[str] = Field(None, alias="LabelLinea")  # Line label from ArcGIS
     # Add other fields as needed based on actual API response
 
     model_config = {"extra": "allow", "populate_by_name": True}
@@ -47,6 +48,7 @@ class ParadaFetchSchema(BaseModel):
     nombre: str
     codigo: Optional[str] = None
     descripcion: Optional[str] = None
+    labelLinea: Optional[str] = None  # Line label from ArcGIS
     localizacion: Optional[dict[str, Any]] = None  # GeoJSON Point
 
     class Config:
