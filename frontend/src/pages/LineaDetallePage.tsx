@@ -17,6 +17,71 @@ L.Icon.Default.mergeOptions({
   shadowUrl: iconShadowUrl,
 });
 
+// Haversine distance in kilometers
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function deg2rad(deg: number) {
+  return deg * (Math.PI / 180);
+}
+
+// Algoritmo de estimación de ETA (Opción 2 simplificada para frontend)
+function calculateETA(paradaTarget: any, todosAutobuses: any[], todasParadas: any[]) {
+  if (!todosAutobuses || todosAutobuses.length === 0) return null;
+
+  const [lonTarget, latTarget] = paradaTarget.localizacion.coordinates;
+  const VELOCIDAD_MEDIA_KMH = 15; // 15 km/h media de un autobús urbano
+  const PENALIZACION_PARADA_MIN = 0.5; // 30s asumiendo subida/bajada de pasajeros
+
+  let minEta = Infinity;
+
+  todosAutobuses.forEach(bus => {
+    if (bus.latitudE6 == null || bus.longitudE6 == null) return;
+    const busLat = bus.latitudE6 / 1000000;
+    const busLon = bus.longitudE6 / 1000000;
+
+    const distanciaKm = getDistanceFromLatLonInKm(busLat, busLon, latTarget, lonTarget);
+    
+    // Contar posible número de paradas intermedias:
+    // Se buscan aquellas paradas que estén "de camino" (aprox. dentro del área entre el bus y el destino)
+    let paradasIntermedias = 0;
+    todasParadas.forEach(p => {
+      if (p.id === paradaTarget.id) return;
+      if (!p.localizacion || !p.localizacion.coordinates) return;
+      
+      const [pLon, pLat] = p.localizacion.coordinates;
+      const dToTarget = getDistanceFromLatLonInKm(pLat, pLon, latTarget, lonTarget);
+      const dToBus = getDistanceFromLatLonInKm(pLat, pLon, busLat, busLon);
+      
+      // Si la suma de distancias al bus y al destino es solo un poco mayor que la distancia directa
+      // entonces podemos asumir que la parada queda de camino
+      if (dToTarget < distanciaKm && dToBus < distanciaKm) {
+        if (Math.abs((dToTarget + dToBus) - distanciaKm) < 0.8) {
+          paradasIntermedias++;
+        }
+      }
+    });
+
+    const tiempoPorDistanciaMin = (distanciaKm / VELOCIDAD_MEDIA_KMH) * 60;
+    const etaTotalMin = tiempoPorDistanciaMin + (paradasIntermedias * PENALIZACION_PARADA_MIN);
+
+    if (etaTotalMin < minEta) {
+      minEta = etaTotalMin;
+    }
+  });
+
+  return minEta !== Infinity ? Math.ceil(minEta) : null;
+}
+
 export default function LineaDetallePage() {
   const { id } = useParams<{ id: string }>();
   const [linea, setLinea] = useState<any>(null);
@@ -30,7 +95,7 @@ export default function LineaDetallePage() {
   const fetchRealTimeBuses = async (labelLinea: string) => {
     try {
       const formattedLabel = String(labelLinea).length === 1 ? String(labelLinea).padStart(2, '0') : labelLinea;
-      const response = await fetch(`https://reddelineas.tussam.es/API/infotus-ui/buses/${formattedLabel}`);
+      const response = await fetch(`/api/tussam/${formattedLabel}`);
       const data = await response.json();
       return data.result || [];
     } catch (error) {
@@ -50,7 +115,7 @@ export default function LineaDetallePage() {
       ]);
       
       // Fetch details for each parada
-      const paradaPromises = paradaLineasData.map((pl: any) => 
+      const paradaPromises = paradaLineasData.map((pl: any) =>
         paradaService.get_parada_by_id(pl.parada_id).catch(() => null)
       );
       
@@ -172,6 +237,7 @@ export default function LineaDetallePage() {
               if (!parada.localizacion || !parada.localizacion.coordinates) return null;
               
               const [lon, lat] = parada.localizacion.coordinates;
+              const eta = calculateETA(parada, autobuses, paradas);
 
               return (
                 <CircleMarker 
@@ -188,6 +254,13 @@ export default function LineaDetallePage() {
                   <Popup>
                     <div className="text-neutral-900 border-none p-0 m-0">
                       <strong>{parada.nombre}</strong><br/>
+                      {eta !== null ? (
+                        <span className="text-blue-600 font-semibold mt-1 inline-block">
+                          Próximo bus: {eta} {eta === 1 ? 'minuto' : 'minutos'}
+                        </span>
+                      ) : (
+                        <span className="text-neutral-500 mt-1 inline-block">Calculando ETA...</span>
+                      )}
                     </div>
                   </Popup>
                 </CircleMarker>
