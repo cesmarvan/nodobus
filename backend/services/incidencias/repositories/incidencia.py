@@ -37,10 +37,6 @@ class IncidenciaRepository(BaseRepository):
         await db.refresh(db_obj)
         return db_obj
     
-    async def get_by_id(self, db: AsyncSession, id: int) -> Optional[Incidencia]:
-        """Retrieve a Incidencia by its ID."""
-        return await super().get(db, id)
-    
     async def get_by_parada_id(self, db: AsyncSession, parada_id: int) -> List[Incidencia]:
         """Retrieve Incidencias by parada_id."""
         query = select(Incidencia).where(Incidencia.parada_id == parada_id)

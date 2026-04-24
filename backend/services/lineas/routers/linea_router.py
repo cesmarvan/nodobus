@@ -69,12 +69,6 @@ async def search_lineas(nombre: str, db: AsyncSession = Depends(get_db)):
     return await service.search_lineas_by_nombre(db, nombre)
 
 
-@router.get("/by-color/{color}", response_model=List[LineaResponse])
-async def get_lineas_by_color(color: str, db: AsyncSession = Depends(get_db)):
-    """Get all Lineas with a specific color."""
-    return await service.get_lineas_by_color(db, color)
-
-
 @router.get("/by-label/{labelLinea}", response_model=LineaResponse)
 async def get_linea_by_labelLinea(labelLinea: str, db: AsyncSession = Depends(get_db)):
     """Get a Linea by its label identifier."""
