@@ -8,7 +8,7 @@ from core.database import get_db
 from services.lineas.schemas import LineaCreate, LineaUpdate, LineaResponse
 from services.lineas.services import LineaService
 
-router = APIRouter(prefix="/api/v1/lineas", tags=["lineas"])
+router = APIRouter(prefix="/lineas", tags=["lineas"])
 service = LineaService()
 
 
@@ -69,7 +69,10 @@ async def search_lineas(nombre: str, db: AsyncSession = Depends(get_db)):
     return await service.search_lineas_by_nombre(db, nombre)
 
 
-@router.get("/by-color/{color}", response_model=List[LineaResponse])
-async def get_lineas_by_color(color: str, db: AsyncSession = Depends(get_db)):
-    """Get all Lineas with a specific color."""
-    return await service.get_lineas_by_color(db, color)
+@router.get("/by-label/{labelLinea}", response_model=LineaResponse)
+async def get_linea_by_labelLinea(labelLinea: str, db: AsyncSession = Depends(get_db)):
+    """Get a Linea by its label identifier."""
+    linea = await service.get_linea_by_labelLinea(db, labelLinea)
+    if not linea:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Linea not found")
+    return linea

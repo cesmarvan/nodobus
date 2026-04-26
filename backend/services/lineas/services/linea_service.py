@@ -58,7 +58,9 @@ class LineaService:
         db_lineas = await self.repository.search_by_nombre(db, nombre)
         return [LineaResponse.model_validate(l) for l in db_lineas]
     
-    async def get_lineas_by_color(self, db: AsyncSession, color: str) -> List[LineaResponse]:
-        """Get all Lineas with a specific color."""
-        db_lineas = await self.repository.get_by_color(db, color)
-        return [LineaResponse.model_validate(l) for l in db_lineas]
+    async def get_linea_by_labelLinea(self, db: AsyncSession, labelLinea: str) -> Optional[LineaResponse]:
+        """Get a Linea by its label identifier."""
+        db_linea = await self.repository.get_by_labelLinea(db, labelLinea)
+        if db_linea:
+            return LineaResponse.model_validate(db_linea)
+        return None

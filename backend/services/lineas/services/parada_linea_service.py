@@ -66,3 +66,4 @@ class ParadaLineaService:
         if db_parada_linea:
             return ParadaLineaResponse.model_validate(db_parada_linea)
         return None
+    

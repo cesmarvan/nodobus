@@ -85,8 +85,8 @@ class LineaRepository(BaseRepository):
         result = await db.execute(query)
         return result.scalars().all()
     
-    async def get_by_color(self, db: AsyncSession, color: str) -> List[Linea]:
-        """Get all Lineas with a specific color."""
-        query = select(Linea).where(Linea.color == color)
+    async def get_by_labelLinea(self, db: AsyncSession, labelLinea: str) -> Optional[Linea]:
+        """Retrieve a Linea by its labelLinea identifier."""
+        query = select(Linea).where(Linea.labelLinea == labelLinea)
         result = await db.execute(query)
-        return result.scalars().all()
+        return result.scalar_one_or_none()
