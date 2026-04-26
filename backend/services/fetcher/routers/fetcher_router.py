@@ -2,9 +2,10 @@
 
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from services.fetcher.schemas.common import FetchResultResponse
 from services.fetcher.services.sync_service import SyncService
+from services.fetcher.services.tussam_client import TussamAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,28 @@ async def fetch_paradas():
     except Exception as e:
         logger.error(f"Error fetching paradas: {e}")
         raise
+
+
+@router.get("/tussam/buses/{line_label}")
+async def get_real_time_buses(line_label: str):
+    """Get real-time buses for a specific line from TUSSAM API.
+
+    Args:
+        line_label: Line label/number (e.g., "25", "C3")
+
+    Returns:
+        JSON response with real-time bus data from TUSSAM API
+    """
+    try:
+        client = TussamAPIClient()
+        data = await client.get_buses_by_line(line_label)
+        logger.info(f"Successfully fetched buses for line {line_label}")
+        return data
+    except Exception as e:
+        logger.error(f"Error fetching real-time buses for line {line_label}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch real-time buses: {str(e)}")
+
+
 
 
 

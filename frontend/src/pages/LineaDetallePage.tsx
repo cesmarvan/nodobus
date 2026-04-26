@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom';
 import { lineaService } from '../api/linea';
 import { paradaService } from '../api/parada';
 import { paradaLineaService } from '../api/parada_linea';
+import { fetcherService } from '../api/fetcher';
 
 // Fix the default marker icon missing in Vite
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
@@ -95,31 +96,11 @@ export default function LineaDetallePage() {
   const fetchRealTimeBuses = async (labelLinea: string) => {
     try {
       const formattedLabel = String(labelLinea).length === 1 ? String(labelLinea).padStart(2, '0') : labelLinea;
-      const response = await fetch(`/api/tussam/${formattedLabel}`);
-      
-      if (!response.ok) {
-        console.error(`TUSSAM API returned status ${response.status}`);
-        return [];
-      }
-      
-      // Get response text first to debug
-      const text = await response.text();
-      
-      // Check if response is valid JSON
-      if (!text) {
-        console.error("TUSSAM API returned empty response");
-        return [];
-      }
-      
-      try {
-        const data = JSON.parse(text);
-        return data.result || [];
-      } catch (parseError) {
-        console.error("TUSSAM API returned non-JSON response:", text.substring(0, 200));
-        return [];
-      }
+      const data = await fetcherService.get_real_time_buses(formattedLabel);
+      console.log("Successfully fetched buses:", data);
+      return data.result || [];
     } catch (error) {
-      console.error("Error fetching real-time buses from TUSSAM:", error);
+      console.error("Error fetching real-time buses from backend:", error);
       return [];
     }
   };
