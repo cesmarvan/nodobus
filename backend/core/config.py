@@ -35,16 +35,6 @@ class Settings(BaseSettings):
         validation_alias="LINEAS_SERVICE_BASE_URL",
     )
 
-    # Celery configuration
-    CELERY_BROKER_URL: str = Field(
-        default="redis://localhost:6379/0",
-        validation_alias="CELERY_BROKER_URL",
-    )
-    CELERY_RESULT_BACKEND: str = Field(
-        default="redis://localhost:6379/0",
-        validation_alias="CELERY_RESULT_BACKEND",
-    )
-
     @property
     def database_url(self) -> str:
         """Construct the database URL from individual components.

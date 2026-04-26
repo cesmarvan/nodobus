@@ -5,11 +5,6 @@ import logging
 from fastapi import APIRouter
 from services.fetcher.schemas.common import FetchResultResponse
 from services.fetcher.services.sync_service import SyncService
-from services.fetcher.tasks import (
-    sync_autobuses_task,
-    sync_lineas_task,
-    sync_paradas_task,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -33,14 +28,10 @@ async def fetch_lineas():
     - count_failed: Number of failed sync operations
     - errors: List of any errors encountered
 
-    This endpoint triggers a background Celery task to fetch líneas from the
+    This endpoint fetches líneas from the
     ArcGIS FeatureServer and sync them to the database via the Lineas service API.
     """
     try:
-        # Trigger async task
-        sync_lineas_task.delay()
-
-        # For now, return from sync service directly (no async/celery)
         sync_service = SyncService()
         result = await sync_service.sync_lineas()
         logger.info(
@@ -67,14 +58,10 @@ async def fetch_paradas():
     - count_failed: Number of failed sync operations
     - errors: List of any errors encountered
 
-    This endpoint triggers a background Celery task to fetch paradas from the
+    This endpoint fetches paradas from the
     ArcGIS FeatureServer and sync them to the database via the Lineas service API.
     """
     try:
-        # Trigger async task
-        sync_paradas_task.delay()
-
-        # For now, return from sync service directly (no async/celery)
         sync_service = SyncService()
         result = await sync_service.sync_paradas()
         logger.info(
@@ -104,15 +91,11 @@ async def fetch_autobuses_by_line(linea_numero: int):
     - count_failed: Number of failed sync operations
     - errors: List of any errors encountered
 
-    This endpoint triggers a background Celery task to fetch autobuses from the
+    This endpoint fetches autobuses from the
     TUSSAM infotus API for the specified línea and sync them to the database
     via the Lineas service API.
     """
     try:
-        # Trigger async task
-        sync_autobuses_task.delay(linea_numero)
-
-        # For now, return from sync service directly (no async/celery)
         sync_service = SyncService()
         result = await sync_service.sync_autobuses(linea_numero)
         logger.info(
