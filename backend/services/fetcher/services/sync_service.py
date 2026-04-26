@@ -2,14 +2,12 @@
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 import httpx
 
 from services.fetcher.schemas.common import ErrorDetail, FetchResultResponse
 from services.fetcher.services.fetcher_service import FetcherService
 from services.fetcher.services.lineas_client import LineasAPIClient
-from services.lineas.schemas.autobus import AutobusCreate, AutobusUpdate
 from services.lineas.schemas.linea import LineaCreate, LineaUpdate
 from services.lineas.schemas.parada import ParadaCreate, ParadaUpdate
 from services.lineas.schemas.parada_linea import ParadaLineaCreate
@@ -264,96 +262,3 @@ class SyncService:
             duration_seconds=duration,
         )
 
-    async def sync_autobuses(
-        self,
-        linea_numero: Optional[int] = None,
-    ) -> FetchResultResponse:
-        """Sync autobuses from TUSSAM infotus to database via Lineas service API.
-
-        Args:
-            linea_numero: Optional línea number to filter by
-
-        Returns:
-            FetchResultResponse with sync statistics
-        """
-        start_time = datetime.now()
-        created = 0
-        updated = 0
-        failed = 0
-        errors: list[ErrorDetail] = []
-
-        try:
-            # Fetch from external TUSSAM API
-            fetched_autobuses = await self.fetcher.fetch_autobuses(linea_numero)
-
-            for autobus_data in fetched_autobuses:
-                try:
-                    # Check if autobus exists by vehiculo number via Lineas service API
-                    existing_autobus = await self.lineas_client.get_autobus_by_vehiculo(
-                        autobus_data.vehiculo,
-                    )
-
-                    if existing_autobus:
-                        # Update existing via Lineas service API
-                        update_data = AutobusUpdate(
-                            posicion=autobus_data.posicion,
-                            sentido=autobus_data.sentido,
-                            linea_id=autobus_data.linea,
-                        )
-                        await self.lineas_client.update_autobus(existing_autobus.id, update_data)
-                        updated += 1
-                        logger.debug(f"Updated autobus {autobus_data.vehiculo}")
-                    else:
-                        # Create new via Lineas service API
-                        create_data = AutobusCreate(
-                            vehiculo=autobus_data.vehiculo,
-                            posicion=autobus_data.posicion,
-                            sentido=autobus_data.sentido,
-                            linea_id=autobus_data.linea,
-                        )
-                        await self.lineas_client.create_autobus(create_data)
-                        created += 1
-                        logger.debug(f"Created autobus {autobus_data.vehiculo}")
-
-                except httpx.HTTPError as e:
-                    failed += 1
-                    error_msg = f"Failed to sync autobus {autobus_data.vehiculo}: API error - {e}"
-                    logger.warning(error_msg)
-                    errors.append(
-                        ErrorDetail(
-                            code="AUTOBUS_SYNC_ERROR",
-                            message=error_msg,
-                        ),
-                    )
-                except Exception as e:
-                    failed += 1
-                    error_msg = f"Failed to sync autobus {autobus_data.vehiculo}: {e}"
-                    logger.warning(error_msg)
-                    errors.append(
-                        ErrorDetail(
-                            code="AUTOBUS_SYNC_ERROR",
-                            message=error_msg,
-                        ),
-                    )
-
-        except Exception as e:
-            logger.error(f"Error in sync_autobuses: {e}")
-            errors.append(
-                ErrorDetail(
-                    code="AUTOBUS_FETCH_ERROR",
-                    message=f"Failed to fetch autobuses: {e}",
-                ),
-            )
-
-        duration = (datetime.now() - start_time).total_seconds()
-        status = "success" if failed == 0 else "partial" if created + updated > 0 else "failed"
-
-        return FetchResultResponse(
-            status=status,
-            count_created=created,
-            count_updated=updated,
-            count_failed=failed,
-            errors=errors,
-            timestamp=datetime.utcnow(),
-            duration_seconds=duration,
-        )

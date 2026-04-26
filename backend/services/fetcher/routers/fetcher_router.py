@@ -74,39 +74,5 @@ async def fetch_paradas():
         raise
 
 
-@router.post("/autobuses/{linea_numero}", response_model=FetchResultResponse)
-async def fetch_autobuses_by_line(linea_numero: int):
-    """Trigger fetch and sync of autobuses for a specific línea from TUSSAM infotus.
-
-    **Path Parameters:**
-    - linea_numero: Line number to fetch buses for
-
-    **Endpoints called:**
-    - TUSSAM infotus API for the specified línea
-    - Lineas service API for create/update operations
-
-    **Returns:**
-    - count_created: Number of new autobuses created
-    - count_updated: Number of existing autobuses updated
-    - count_failed: Number of failed sync operations
-    - errors: List of any errors encountered
-
-    This endpoint fetches autobuses from the
-    TUSSAM infotus API for the specified línea and sync them to the database
-    via the Lineas service API.
-    """
-    try:
-        sync_service = SyncService()
-        result = await sync_service.sync_autobuses(linea_numero)
-        logger.info(
-            f"Sync autobuses (línea {linea_numero}): created={result.count_created}, "
-            f"updated={result.count_updated}, failed={result.count_failed}"
-        )
-        return result
-    except Exception as e:
-        logger.error(f"Error fetching autobuses for línea {linea_numero}: {e}")
-        raise
-
-
 
 

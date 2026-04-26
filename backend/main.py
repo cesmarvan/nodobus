@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from core.config import get_settings
 from core.database import engine
 from services.incidencias.routers.incidencia import router as incidencias_router
-from services.lineas.routers import autobus_router, linea_router, parada_linea_router,parada_router
+from services.lineas.routers import linea_router, parada_linea_router, parada_router
 from services.fetcher.routers.fetcher_router import router as fetcher_router
 
 
@@ -50,7 +50,6 @@ async def root() -> dict[str, object]:
 
 
 app.include_router(incidencias_router, prefix=settings.api_prefix)
-app.include_router(autobus_router, prefix=settings.api_prefix)
 app.include_router(linea_router, prefix=settings.api_prefix)
 app.include_router(parada_linea_router, prefix=settings.api_prefix)
 app.include_router(parada_router, prefix=settings.api_prefix)

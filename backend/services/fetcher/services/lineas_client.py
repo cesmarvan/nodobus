@@ -6,7 +6,6 @@ from typing import Optional
 import httpx
 
 from core.config import get_settings
-from services.lineas.schemas.autobus import AutobusCreate, AutobusResponse, AutobusUpdate
 from services.lineas.schemas.linea import LineaCreate, LineaResponse, LineaUpdate
 from services.lineas.schemas.parada import ParadaCreate, ParadaResponse, ParadaUpdate
 from services.lineas.schemas.parada_linea import ParadaLineaCreate, ParadaLineaResponse
@@ -197,63 +196,6 @@ class LineasAPIClient:
         except Exception as e:
             logger.error(f"Error updating parada {parada_id}: {e}")
             raise
-
-    # Autobus operations
-
-    async def get_autobus_by_vehiculo(self, vehiculo: int) -> Optional[AutobusResponse]:
-        """Get an Autobus by its vehicle identifier.
-
-        Args:
-            vehiculo: Vehicle identifier
-
-        Returns:
-            AutobusResponse or None if not found
-        """
-        try:
-            data = await self._request("GET", f"/autobuses/by-vehiculo/{vehiculo}")
-            return AutobusResponse(**data)
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
-                return None
-            raise
-        except Exception as e:
-            logger.error(f"Error getting autobus by vehiculo {vehiculo}: {e}")
-            return None
-
-    async def create_autobus(self, autobus_data: AutobusCreate) -> AutobusResponse:
-        """Create a new Autobus.
-
-        Args:
-            autobus_data: AutobusCreate schema
-
-        Returns:
-            Created AutobusResponse
-        """
-        data = await self._request("POST", "/autobuses", autobus_data.model_dump())
-        return AutobusResponse(**data)
-
-    async def update_autobus(self, autobus_id: int, autobus_data: AutobusUpdate) -> Optional[AutobusResponse]:
-        """Update an Autobus.
-
-        Args:
-            autobus_id: Autobus ID
-            autobus_data: AutobusUpdate schema
-
-        Returns:
-            Updated AutobusResponse or None if not found
-        """
-        try:
-            data = await self._request("PUT", f"/autobuses/{autobus_id}", autobus_data.model_dump(exclude_unset=True))
-            return AutobusResponse(**data)
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
-                logger.warning(f"Autobus {autobus_id} not found")
-                return None
-            raise
-        except Exception as e:
-            logger.error(f"Error updating autobus {autobus_id}: {e}")
-            raise
-   
 
     # ParadaLinea operations
 
