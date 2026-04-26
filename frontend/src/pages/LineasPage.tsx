@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { lineaService } from '../api/linea';
+import { fetcherService } from '../api/fetcher';
 
 export default function LineasPage() {
   const [lineas, setLineas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     lineaService.get_lineas()
@@ -19,6 +22,31 @@ export default function LineasPage() {
       });
   }, []);
 
+  const handleActualizarLineas = async () => {
+    console.log("Iniciando actualización de líneas y paradas...");
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      // First POST request for lineas sync
+      await fetcherService.fetch_lineas();
+      
+      // Then POST request for paradas sync
+      await fetcherService.fetch_paradas();
+      
+      // Finally, GET lineas to load updated data
+      const updatedLineas = await lineaService.get_lineas();
+      setLineas(updatedLineas);
+      
+      console.log("Actualización completada");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error desconocido";
+      setUpdateError(errorMessage);
+      console.error("Error al actualizar líneas y paradas", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const filteredLineas = lineas.filter(linea => {
     const nombre = linea.nombre || `Línea ${linea.labelLinea}`;
     return nombre.toLowerCase().includes(searchQuery.toLowerCase());
@@ -28,8 +56,12 @@ export default function LineasPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center border-b border-neutral-800 pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-neutral-100">Líneas de Autobus</h1>
-        <button className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-2 transition-all hover:-translate-y-1">
-          Actualizar Líneas
+        <button 
+          onClick={handleActualizarLineas}
+          disabled={isUpdating}
+          className={isUpdating ? "bg-gray-700 cursor-not-allowed text-white font-medium px-5 py-2 transition-all" : "bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-2 transition-all hover:-translate-y-1"}
+        >
+          {isUpdating ? "Actualizando..." : "Actualizar Líneas"}
         </button>
         <input
           type="text"
@@ -39,6 +71,13 @@ export default function LineasPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
+
+      {updateError && (
+        <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded">
+          <p className="font-semibold">Error al actualizar</p>
+          <p className="text-sm">{updateError}</p>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-neutral-400">Cargando datos...</p>

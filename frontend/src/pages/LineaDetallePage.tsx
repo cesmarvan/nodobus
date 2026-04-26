@@ -96,8 +96,28 @@ export default function LineaDetallePage() {
     try {
       const formattedLabel = String(labelLinea).length === 1 ? String(labelLinea).padStart(2, '0') : labelLinea;
       const response = await fetch(`/api/tussam/${formattedLabel}`);
-      const data = await response.json();
-      return data.result || [];
+      
+      if (!response.ok) {
+        console.error(`TUSSAM API returned status ${response.status}`);
+        return [];
+      }
+      
+      // Get response text first to debug
+      const text = await response.text();
+      
+      // Check if response is valid JSON
+      if (!text) {
+        console.error("TUSSAM API returned empty response");
+        return [];
+      }
+      
+      try {
+        const data = JSON.parse(text);
+        return data.result || [];
+      } catch (parseError) {
+        console.error("TUSSAM API returned non-JSON response:", text.substring(0, 200));
+        return [];
+      }
     } catch (error) {
       console.error("Error fetching real-time buses from TUSSAM:", error);
       return [];
