@@ -139,6 +139,25 @@ export default function LineaDetallePage() {
     fetchLineaData();
   }, [id]);
 
+  // Set up automatic bus fetching every 10 seconds
+  useEffect(() => {
+    if (!linea?.labelLinea) return;
+
+    // Fetch immediately
+    const fetchBuses = async () => {
+      const busesData = await fetchRealTimeBuses(linea.labelLinea);
+      setAutobuses(busesData);
+    };
+
+    fetchBuses();
+
+    // Set up interval for every 10 seconds
+    const interval = setInterval(fetchBuses, 10000);
+
+    // Clean up interval on unmount or when linea changes
+    return () => clearInterval(interval);
+  }, [linea?.labelLinea]);
+
   const handleRefreshBuses = async () => {
     if (linea?.labelLinea) {
       const busesData = await fetchRealTimeBuses(linea.labelLinea);
